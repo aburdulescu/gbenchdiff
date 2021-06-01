@@ -63,7 +63,7 @@ func (old Benchmark) PrintDiff(w io.Writer, new Benchmark) {
 	realTimeDiff := (new.RealTime - old.RealTime) / math.Abs(old.RealTime)
 	cpuTimeDiff := (new.CPUTime - old.CPUTime) / math.Abs(old.CPUTime)
 	fmt.Fprintf(w,
-		"%s\t%v\t%v\t%v\t%v\t%v\t%v\n",
+		"%s\t%.4f\t%.4f\t%.2f\t%.2f\t%.2f\t%.2f\n",
 		old.Name, realTimeDiff, cpuTimeDiff, old.RealTime, new.RealTime, old.CPUTime, new.CPUTime)
 }
 
