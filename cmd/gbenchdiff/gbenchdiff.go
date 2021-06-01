@@ -90,6 +90,7 @@ type Result struct {
 	Benchmarks []Benchmark `json:"benchmarks"`
 }
 
+// TODO: take in consideration aggregates if present
 type Benchmark struct {
 	Name            string  `json:"name"`
 	RunName         string  `json:"run_name"`
