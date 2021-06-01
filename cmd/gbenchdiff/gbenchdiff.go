@@ -43,7 +43,7 @@ func run() error {
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
 
-	fmt.Fprintln(w, "Benchmark\tTime\tCPU\tTime old\tTime new\tCPU old\tCPU new")
+	fmt.Fprintln(w, "Benchmark\tTime(%)\tCPU(%)\tTime old\tTime new\tCPU old\tCPU new")
 	fmt.Fprintln(w, "---------\t----\t---\t--------\t--------\t-------\t-------")
 
 	for _, benchmark := range oldRes.Benchmarks {
@@ -60,11 +60,21 @@ func run() error {
 }
 
 func (old Benchmark) PrintDiff(w io.Writer, new Benchmark) {
-	realTimeDiff := (new.RealTime - old.RealTime) / math.Abs(old.RealTime)
-	cpuTimeDiff := (new.CPUTime - old.CPUTime) / math.Abs(old.CPUTime)
-	fmt.Fprintf(w,
-		"%s\t%.4f\t%.4f\t%.2f\t%.2f\t%.2f\t%.2f\n",
-		old.Name, realTimeDiff, cpuTimeDiff, old.RealTime, new.RealTime, old.CPUTime, new.CPUTime)
+	realTimeDiff := ((new.RealTime - old.RealTime) / math.Abs(old.RealTime)) * 100
+	cpuTimeDiff := ((new.CPUTime - old.CPUTime) / math.Abs(old.CPUTime)) * 100
+	fmt.Fprintf(w, "%s", old.Name)
+	if realTimeDiff > 0 {
+		fmt.Fprintf(w, "\t+%.2f", realTimeDiff)
+	} else {
+		fmt.Fprintf(w, "\t%.2f", realTimeDiff)
+	}
+	if cpuTimeDiff > 0 {
+		fmt.Fprintf(w, "\t+%.2f", cpuTimeDiff)
+	} else {
+		fmt.Fprintf(w, "\t%.2f", cpuTimeDiff)
+	}
+	fmt.Fprintf(w, "\t%.2f\t%.2f\t%.2f\t%.2f\n", old.RealTime, new.RealTime, old.CPUTime, new.CPUTime)
+
 }
 
 func findBenchmarkByName(benchmarks []Benchmark, name string) int {
