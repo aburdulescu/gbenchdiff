@@ -16,3 +16,5 @@
 
 /example/bench
 /example/*.json
+
+/cmd/gbenchdiff/gbenchdiff
