@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -63,17 +64,24 @@ func run() error {
 		return err
 	}
 
+	oldMeans := getMeans(oldRes.Benchmarks)
+	newMeans := getMeans(newRes.Benchmarks)
+
 	w := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
 
 	fmt.Fprintln(w, "Benchmark\tTime(%)\tCPU(%)\tTime old\tTime new\tCPU old\tCPU new")
 	fmt.Fprintln(w, "---------\t----\t---\t--------\t--------\t-------\t-------")
 
-	for _, benchmark := range oldRes.Benchmarks {
-		i := findBenchmarkByName(newRes.Benchmarks, benchmark.Name)
-		if i == -1 {
+	for name, oldMetric := range oldMeans {
+		newMetric, ok := newMeans[name]
+		if !ok {
 			continue
 		}
-		benchmark.PrintDiff(w, newRes.Benchmarks[i])
+		if newMetric.TimeUnit != oldMetric.TimeUnit {
+			return fmt.Errorf("benchmarks %s has different time unit: old=%s, new=%s\n",
+				name, oldMetric.TimeUnit, newMetric.TimeUnit)
+		}
+		oldMetric.PrintDiff(name, newMetric, w)
 	}
 
 	w.Flush()
@@ -81,10 +89,10 @@ func run() error {
 	return nil
 }
 
-func (old Benchmark) PrintDiff(w io.Writer, new Benchmark) {
-	realTimeDiff := ((new.RealTime - old.RealTime) / math.Abs(old.RealTime)) * 100
-	cpuTimeDiff := ((new.CPUTime - old.CPUTime) / math.Abs(old.CPUTime)) * 100
-	fmt.Fprintf(w, "%s", old.Name)
+func (old Metric) PrintDiff(name string, new Metric, w io.Writer) {
+	realTimeDiff := ((old.RealTime - new.RealTime) / math.Abs(old.RealTime)) * 100
+	cpuTimeDiff := ((old.CPUTime - new.CPUTime) / math.Abs(old.CPUTime)) * 100
+	fmt.Fprintf(w, "%s", name)
 	if realTimeDiff > 0 {
 		fmt.Fprintf(w, "\t+%.2f", realTimeDiff)
 	} else {
@@ -97,15 +105,6 @@ func (old Benchmark) PrintDiff(w io.Writer, new Benchmark) {
 	}
 	fmt.Fprintf(w, "\t%.2f\t%.2f\t%.2f\t%.2f\n", old.RealTime, new.RealTime, old.CPUTime, new.CPUTime)
 
-}
-
-func findBenchmarkByName(benchmarks []Benchmark, name string) int {
-	for i, b := range benchmarks {
-		if b.Name == name {
-			return i
-		}
-	}
-	return -1
 }
 
 type Result struct {
@@ -123,4 +122,25 @@ type Benchmark struct {
 	RealTime        float64 `json:"real_time"`
 	CPUTime         float64 `json:"cpu_time"`
 	TimeUnit        string  `json:"time_unit"`
+}
+
+type Metric struct {
+	RealTime float64
+	CPUTime  float64
+	TimeUnit string
+}
+
+func getMeans(benchmarks []Benchmark) map[string]Metric {
+	means := make(map[string]Metric)
+	for _, benchmark := range benchmarks {
+		if strings.HasSuffix(benchmark.Name, "_mean") {
+			name := strings.TrimSuffix(benchmark.Name, "_mean")
+			means[name] = Metric{
+				RealTime: benchmark.RealTime,
+				CPUTime:  benchmark.CPUTime,
+				TimeUnit: benchmark.TimeUnit,
+			}
+		}
+	}
+	return means
 }
