@@ -9,6 +9,28 @@ import (
 	"text/tabwriter"
 )
 
+// TODO: implement ManWhitneyUTest(if it fails ignore mean difference), needs multiple samples(at least 10)
+// TODO: add flag to signal aggregates only comparison
+// TODO: use interquartile range rule to remove outliers
+
+const usage = `gbenchdiff [options] old.json new.json
+
+if only one sample per benchmark present:
+- print % difference calculated with this formula: ((new - old)/|old|)*100
+- print times for each file
+
+if multiple samples present:
+- remove outliers with interquartile range rule
+- perform significance test(Man-Whitney U-test)
+- print p-value
+- print % difference of mean value
+- print times for each file
+
+if aggregates flag active(and aggregates present in the files):
+- print % difference for each value(mean, median, stddev) calculated with this formula: ((new - old)/|old|)*100
+- print times for each file
+`
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
@@ -90,7 +112,6 @@ type Result struct {
 	Benchmarks []Benchmark `json:"benchmarks"`
 }
 
-// TODO: take in consideration aggregates if present
 type Benchmark struct {
 	Name            string  `json:"name"`
 	RunName         string  `json:"run_name"`

@@ -9,6 +9,6 @@ static void BM_foo(benchmark::State& state) {
   }
 }
 
-BENCHMARK(BM_foo)->DenseRange(0,20);
+BENCHMARK(BM_foo)->DenseRange(0,20, 2);
 
 BENCHMARK_MAIN();
