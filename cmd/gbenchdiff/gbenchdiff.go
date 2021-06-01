@@ -58,12 +58,15 @@ func run() error {
 		return fmt.Errorf("need two args: old.json and new.json")
 	}
 
-	oldFile, err := os.Open(os.Args[1])
+	oldFilepath := os.Args[1]
+	newFilepath := os.Args[2]
+
+	oldFile, err := os.Open(oldFilepath)
 	if err != nil {
 		return err
 	}
 	defer oldFile.Close()
-	newFile, err := os.Open(os.Args[2])
+	newFile, err := os.Open(newFilepath)
 	if err != nil {
 		return err
 	}
@@ -79,7 +82,14 @@ func run() error {
 	}
 
 	oldMeans := getMeans(oldRes.Benchmarks)
+	if len(oldMeans) == 0 {
+		return fmt.Errorf("no mean value present in %s, run benchmark with --benchmark_repetitions", oldFilepath)
+	}
+
 	newMeans := getMeans(newRes.Benchmarks)
+	if len(newMeans) == 0 {
+		return fmt.Errorf("no mean value present in %s, run benchmark with --benchmark_repetitions", newFilepath)
+	}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
 
