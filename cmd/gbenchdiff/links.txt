@@ -1,3 +1,0 @@
-https://pkg.go.dev/golang.org/x/perf/cmd/benchstat
-https://pkg.go.dev/golang.org/x/perf@v0.0.0-20210220033136-40a54f11e909/internal/stats
-https://pkg.go.dev/golang.org/x/perf@v0.0.0-20210220033136-40a54f11e909/benchstat

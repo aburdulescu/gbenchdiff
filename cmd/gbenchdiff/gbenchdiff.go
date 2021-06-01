@@ -12,6 +12,11 @@ import (
 
 // must run benchmarks with multiple repetitions(at least 10)
 
+// useful links
+// https://pkg.go.dev/golang.org/x/perf/cmd/benchstat
+// https://pkg.go.dev/golang.org/x/perf@v0.0.0-20210220033136-40a54f11e909/internal/stats
+// https://pkg.go.dev/golang.org/x/perf@v0.0.0-20210220033136-40a54f11e909/benchstat
+
 // TODO: error if too few repetitions/samples
 // TODO: implement ManWhitneyUTest(if it fails ignore mean difference), needs multiple samples(at least 10)
 // TODO: use interquartile range rule to remove outliers
