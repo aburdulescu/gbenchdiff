@@ -36,6 +36,23 @@ func main() {
 	}
 }
 
+type Result struct {
+	Benchmarks []Benchmark `json:"benchmarks"`
+}
+
+type Benchmark struct {
+	Name            string  `json:"name"`
+	RunName         string  `json:"run_name"`
+	RunType         string  `json:"run_type"`
+	Repetitions     uint64  `json:"repetitions"`
+	RepetitionIndex uint64  `json:"repetition_index"`
+	Threads         int     `json:"threads"`
+	Iterations      uint64  `json:"iterations"`
+	RealTime        float64 `json:"real_time"`
+	CPUTime         float64 `json:"cpu_time"`
+	TimeUnit        string  `json:"time_unit"`
+}
+
 func run() error {
 	if len(os.Args) < 3 {
 		return fmt.Errorf("need two args: old.json and new.json")
@@ -86,45 +103,31 @@ func run() error {
 	return nil
 }
 
+type Metric struct {
+	RealTime float64
+	CPUTime  float64
+	TimeUnit string
+}
+
 func (old Metric) PrintDiff(name string, new Metric, w io.Writer) {
 	realTimeDiff := ((old.RealTime - new.RealTime) / math.Abs(old.RealTime)) * 100
 	cpuTimeDiff := ((old.CPUTime - new.CPUTime) / math.Abs(old.CPUTime)) * 100
+
 	fmt.Fprintf(w, "%s", name)
+
 	if realTimeDiff > 0 {
 		fmt.Fprintf(w, "\t+%.2f", realTimeDiff)
 	} else {
 		fmt.Fprintf(w, "\t%.2f", realTimeDiff)
 	}
+
 	if cpuTimeDiff > 0 {
 		fmt.Fprintf(w, "\t+%.2f", cpuTimeDiff)
 	} else {
 		fmt.Fprintf(w, "\t%.2f", cpuTimeDiff)
 	}
+
 	fmt.Fprintf(w, "\t%.2f\t%.2f\t%.2f\t%.2f\n", old.RealTime, new.RealTime, old.CPUTime, new.CPUTime)
-
-}
-
-type Result struct {
-	Benchmarks []Benchmark `json:"benchmarks"`
-}
-
-type Benchmark struct {
-	Name            string  `json:"name"`
-	RunName         string  `json:"run_name"`
-	RunType         string  `json:"run_type"`
-	Repetitions     uint64  `json:"repetitions"`
-	RepetitionIndex uint64  `json:"repetition_index"`
-	Threads         int     `json:"threads"`
-	Iterations      uint64  `json:"iterations"`
-	RealTime        float64 `json:"real_time"`
-	CPUTime         float64 `json:"cpu_time"`
-	TimeUnit        string  `json:"time_unit"`
-}
-
-type Metric struct {
-	RealTime float64
-	CPUTime  float64
-	TimeUnit string
 }
 
 func getMeans(benchmarks []Benchmark) map[string]Metric {
