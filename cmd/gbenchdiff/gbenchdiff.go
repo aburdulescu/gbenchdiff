@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"sort"
 	"strings"
 	"text/tabwriter"
 )
@@ -110,6 +111,13 @@ func run() error {
 
 	w.Flush()
 
+	samples := GetSamples(oldRes.Benchmarks)
+
+	for _, s := range samples {
+		s.RemoveOutliers()
+        fmt.Println(s.Name, s.IQR(), len(s.Values))
+	}
+
 	return nil
 }
 
@@ -153,4 +161,94 @@ func getMeans(benchmarks []Benchmark) map[string]Metric {
 		}
 	}
 	return means
+}
+
+type Sample struct {
+	Name   string
+	Values []float64
+}
+
+func (s Sample) IQR() float64 {
+	return s.Percentile(0.75) - s.Percentile(0.25)
+}
+
+func (s Sample) Percentile(pctile float64) float64 {
+	if len(s.Values) == 0 {
+		return math.NaN()
+	}
+
+	N := float64(len(s.Values))
+
+	//n := pctile * (N + 1) // R6
+	n := 1/3.0 + pctile*(N+1/3.0) // R8
+
+	kf, frac := math.Modf(n)
+
+	k := int(kf)
+	if k <= 0 {
+		return s.Values[0]
+	} else if k >= len(s.Values) {
+		return s.Values[len(s.Values)-1]
+	}
+
+	return s.Values[k-1] + frac*(s.Values[k]-s.Values[k-1])
+}
+
+func (s *Sample) RemoveOutliers() {
+	iqr := s.IQR()
+	q1 := s.Percentile(0.25)
+	q3 := s.Percentile(0.75)
+
+	low := q1 - 1.5*iqr
+	high := q3 - 1.5*iqr
+
+	start := 0
+	for ; start < len(s.Values); start++ {
+		if s.Values[start] >= low {
+			break
+		}
+	}
+
+	end := len(s.Values) - 1
+	for ; end >= 0; end-- {
+		if s.Values[end] <= high {
+			break
+		}
+	}
+
+	end = len(s.Values) - end
+
+    s.Values = s.Values[start:end]
+
+    fmt.Println(start, end, len(s.Values))
+}
+
+func findSample(samples []Sample, name string) *Sample {
+	for i := range samples {
+		if samples[i].Name == name {
+			return &samples[i]
+		}
+	}
+	return nil
+}
+
+func GetSamples(benchmarks []Benchmark) []Sample {
+	var samples []Sample
+	for _, b := range benchmarks {
+		if strings.HasSuffix(b.Name, "_mean") || strings.HasSuffix(b.Name, "_median") || strings.HasSuffix(b.Name, "_stddev") {
+			continue
+		}
+		sample := findSample(samples, b.Name)
+		if sample == nil {
+			samples = append(samples, Sample{Name: b.Name})
+		} else {
+			sample.Values = append(sample.Values, b.RealTime)
+		}
+	}
+	for i := range samples {
+		v := samples[i].Values
+		sort.Float64s(v)
+		samples[i].Values = v
+	}
+	return samples
 }
