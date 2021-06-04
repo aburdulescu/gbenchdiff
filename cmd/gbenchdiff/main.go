@@ -91,8 +91,8 @@ func run() error {
 		metrics_o := GetMetrics(oldRes.Benchmarks)
 		metrics_n := GetMetrics(newRes.Benchmarks)
 		w := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
-		fmt.Fprintln(w, "name\treal\told\tnew\tcpu\told\tnew")
-		fmt.Fprintln(w, "----\t----\t---\t---\t---\t---\t---")
+		fmt.Fprintln(w, "name\treal\tnote\told\tnew\tcpu\tnote\told\tnew")
+		fmt.Fprintln(w, "----\t----\t----\t---\t---\t---\t----\t---\t---")
 		for _, m_o := range metrics_o {
 			i := findMetric(metrics_n, m_o.Name)
 			if i == -1 {

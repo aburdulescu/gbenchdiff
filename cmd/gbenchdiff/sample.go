@@ -3,10 +3,13 @@ package main
 import (
 	"fmt"
 	"io"
-	"math"
 	"sort"
 	"strings"
+
+	"github.com/aburdulescu/gbenchdiff/stats"
 )
+
+const alpha = 0.05
 
 type Metrics struct {
 	Name     string
@@ -80,11 +83,33 @@ func GetMetrics(benchmarks []Benchmark) []Metrics {
 }
 
 func (o Sample) Print(w io.Writer, n Sample) {
-	diff := ((o.Mean - n.Mean) / math.Abs(o.Mean)) * 100
-	if diff > 0 {
-		fmt.Fprintf(w, "\t+%.2f%%", diff)
-	} else {
-		fmt.Fprintf(w, "\t%.2f%%", diff)
+	u, err := stats.MannWhitneyUTest(o.RValues, n.RValues, stats.LocationDiffers)
+
+	pval := u.P
+
+	delta := "~"
+	note := ""
+
+	if err == stats.ErrZeroVariance {
+		note = "(zero variance)"
+	} else if err == stats.ErrSampleSize {
+		note = "(too few samples)"
+	} else if err == stats.ErrSamplesEqual {
+		note = "(all equal)"
+	} else if err != nil {
+		note = fmt.Sprintf("(%s)", err)
+	} else if pval < alpha {
+		if n.Mean == o.Mean {
+			delta = "0.00%"
+		} else {
+			pct := (1.0 - (n.Mean / o.Mean)) * 100.0
+			delta = fmt.Sprintf("%+.2f%%", pct)
+		}
 	}
+	if note == "" && pval != -1 {
+		note = fmt.Sprintf("(p=%0.3f n=%d+%d)", pval, len(o.RValues), len(n.RValues))
+	}
+
+	fmt.Fprintf(w, "\t%s\t%s", delta, note)
 	fmt.Fprintf(w, "\t%.2f\t%.2f", o.Mean, n.Mean)
 }
