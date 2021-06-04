@@ -103,11 +103,12 @@ func run() error {
 		}
 
 		for _, o := range samples_o {
-			n := findSample(samples_n, o.Name)
-			if n == nil {
+			i := findSample(samples_n, o.Name)
+			if i == -1 {
 				continue
 			}
-			o.Diff(*n)
+			n := samples_n[i]
+			o.Diff(n)
 		}
 	} else {
 		oldMeans := getMeans(oldRes.Benchmarks)
@@ -185,27 +186,29 @@ func getMeans(benchmarks []Benchmark) map[string]Metric {
 	return means
 }
 
-func findSample(samples []Sample, name string) *Sample {
+func findSample(samples []Sample, name string) int {
 	for i := range samples {
 		if samples[i].Name == name {
-			return &samples[i]
+			return i
 		}
 	}
-	return nil
+	return -1
 }
 
 func GetSamples(benchmarks []Benchmark) []Sample {
 	var samples []Sample
 	for _, b := range benchmarks {
-		if strings.HasSuffix(b.Name, "_mean") || strings.HasSuffix(b.Name, "_median") || strings.HasSuffix(b.Name, "_stddev") {
+		if strings.HasSuffix(b.Name, "_mean") ||
+			strings.HasSuffix(b.Name, "_median") ||
+			strings.HasSuffix(b.Name, "_stddev") {
 			continue
 		}
-		sample := findSample(samples, b.Name)
-		if sample == nil {
+		i := findSample(samples, b.Name)
+		if i == -1 {
 			samples = append(samples, Sample{Name: b.Name})
-		} else {
-			sample.Values = append(sample.Values, b.RealTime)
+			i = len(samples) - 1
 		}
+		samples[i].Values = append(samples[i].Values, b.RealTime)
 	}
 	for i := range samples {
 		v := samples[i].Values
