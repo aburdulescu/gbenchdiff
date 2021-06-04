@@ -7,7 +7,6 @@ import (
 	"io"
 	"math"
 	"os"
-	"sort"
 	"strings"
 	"text/tabwriter"
 )
@@ -89,40 +88,22 @@ func run() error {
 	}
 
 	if useRaw {
-		samples_o := GetSamples(oldRes.Benchmarks)
-		for i := range samples_o {
-			samples_o[i].ComputeStats()
-		}
-
-		samples_n := GetSamples(newRes.Benchmarks)
-		for i := range samples_n {
-			samples_n[i].ComputeStats()
-		}
-
+		metrics_o := GetMetrics(oldRes.Benchmarks)
+		metrics_n := GetMetrics(newRes.Benchmarks)
 		w := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
-
-		fmt.Fprintln(w, "Benchmark\tDelta\tOld\tNew")
-		fmt.Fprintln(w, "---------\t-----\t---\t---")
-
-		for _, o := range samples_o {
-			i := findSample(samples_n, o.Name)
+		fmt.Fprintln(w, "name\treal\told\tnew\tcpu\told\tnew")
+		fmt.Fprintln(w, "----\t----\t---\t---\t---\t---\t---")
+		for _, m_o := range metrics_o {
+			i := findMetric(metrics_n, m_o.Name)
 			if i == -1 {
 				continue
 			}
-			n := samples_n[i]
-
-			diff := ((o.Mean - n.Mean) / math.Abs(o.Mean)) * 100
-
-			fmt.Fprintf(w, "%s", o.Name)
-
-			if diff > 0 {
-				fmt.Fprintf(w, "\t+%.2f%%", diff)
-			} else {
-				fmt.Fprintf(w, "\t%.2f%%", diff)
-			}
-			fmt.Fprintf(w, "\t%.2f\t%.2f\n", o.Mean, n.Mean)
+			m_n := metrics_n[i]
+			fmt.Fprintf(w, "%s", m_o.Name)
+			m_o.RealTime.Print(w, m_n.RealTime)
+			m_o.CPUTime.Print(w, m_n.CPUTime)
+			fmt.Fprintln(w)
 		}
-
 		w.Flush()
 	} else {
 		oldMeans := getMeans(oldRes.Benchmarks)
@@ -198,36 +179,4 @@ func getMeans(benchmarks []Benchmark) map[string]Metric {
 		}
 	}
 	return means
-}
-
-func findSample(samples []Sample, name string) int {
-	for i := range samples {
-		if samples[i].Name == name {
-			return i
-		}
-	}
-	return -1
-}
-
-func GetSamples(benchmarks []Benchmark) []Sample {
-	var samples []Sample
-	for _, b := range benchmarks {
-		if strings.HasSuffix(b.Name, "_mean") ||
-			strings.HasSuffix(b.Name, "_median") ||
-			strings.HasSuffix(b.Name, "_stddev") {
-			continue
-		}
-		i := findSample(samples, b.Name)
-		if i == -1 {
-			samples = append(samples, Sample{Name: b.Name})
-			i = len(samples) - 1
-		}
-		samples[i].Values = append(samples[i].Values, b.RealTime)
-	}
-	for i := range samples {
-		v := samples[i].Values
-		sort.Float64s(v)
-		samples[i].Values = v
-	}
-	return samples
 }
