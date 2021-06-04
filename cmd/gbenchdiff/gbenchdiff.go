@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"math"
@@ -55,12 +56,17 @@ type Benchmark struct {
 }
 
 func run() error {
-	if len(os.Args) < 3 {
+	var useRaw bool
+	flag.BoolVar(&useRaw, "r", false, "use raw values to calculate stats")
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) < 2 {
 		return fmt.Errorf("need two args: old.json and new.json")
 	}
 
-	oldFilepath := os.Args[1]
-	newFilepath := os.Args[2]
+	oldFilepath := args[0]
+	newFilepath := args[1]
 
 	oldFile, err := os.Open(oldFilepath)
 	if err != nil {
@@ -82,53 +88,56 @@ func run() error {
 		return err
 	}
 
-	oldMeans := getMeans(oldRes.Benchmarks)
-	if len(oldMeans) == 0 {
-		return fmt.Errorf("no mean value present in %s, run benchmark with --benchmark_repetitions", oldFilepath)
-	}
+	if useRaw {
 
-	newMeans := getMeans(newRes.Benchmarks)
-	if len(newMeans) == 0 {
-		return fmt.Errorf("no mean value present in %s, run benchmark with --benchmark_repetitions", newFilepath)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
-
-	fmt.Fprintln(w, "Benchmark\tTime\tOld\tNew\tCPU\tOld\tNew")
-	fmt.Fprintln(w, "---------\t----\t---\t---\t---\t---\t---")
-
-	for name, oldMetric := range oldMeans {
-		newMetric, ok := newMeans[name]
-		if !ok {
-			continue
+		samples_o := GetSamples(oldRes.Benchmarks)
+		for i := range samples_o {
+			samples_o[i].ComputeStats()
+			fmt.Println(len(samples_o[i].RValues), len(samples_o[i].Values), samples_o[i])
 		}
-		if newMetric.TimeUnit != oldMetric.TimeUnit {
-			return fmt.Errorf("benchmarks %s has different time unit: old=%s, new=%s\n",
-				name, oldMetric.TimeUnit, newMetric.TimeUnit)
+
+		samples_n := GetSamples(newRes.Benchmarks)
+		for i := range samples_n {
+			samples_n[i].ComputeStats()
+			fmt.Println(len(samples_n[i].RValues), len(samples_n[i].Values), samples_n[i])
 		}
-		oldMetric.PrintDiff(name, newMetric, w)
-	}
 
-	w.Flush()
-
-	samples_o := GetSamples(oldRes.Benchmarks)
-	for i := range samples_o {
-		samples_o[i].ComputeStats()
-		fmt.Println(len(samples_o[i].RValues), len(samples_o[i].Values), samples_o[i])
-	}
-
-	samples_n := GetSamples(newRes.Benchmarks)
-	for i := range samples_n {
-		samples_n[i].ComputeStats()
-		fmt.Println(len(samples_n[i].RValues), len(samples_n[i].Values), samples_n[i])
-	}
-
-	for _, o := range samples_o {
-		n := findSample(samples_n, o.Name)
-		if n == nil {
-			continue
+		for _, o := range samples_o {
+			n := findSample(samples_n, o.Name)
+			if n == nil {
+				continue
+			}
+			o.Diff(*n)
 		}
-		o.Diff(*n)
+	} else {
+		oldMeans := getMeans(oldRes.Benchmarks)
+		if len(oldMeans) == 0 {
+			return fmt.Errorf("no mean value present in %s, run benchmark with --benchmark_repetitions", oldFilepath)
+		}
+
+		newMeans := getMeans(newRes.Benchmarks)
+		if len(newMeans) == 0 {
+			return fmt.Errorf("no mean value present in %s, run benchmark with --benchmark_repetitions", newFilepath)
+		}
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
+
+		fmt.Fprintln(w, "Benchmark\tTime\tOld\tNew\tCPU\tOld\tNew")
+		fmt.Fprintln(w, "---------\t----\t---\t---\t---\t---\t---")
+
+		for name, oldMetric := range oldMeans {
+			newMetric, ok := newMeans[name]
+			if !ok {
+				continue
+			}
+			if newMetric.TimeUnit != oldMetric.TimeUnit {
+				return fmt.Errorf("benchmarks %s has different time unit: old=%s, new=%s\n",
+					name, oldMetric.TimeUnit, newMetric.TimeUnit)
+			}
+			oldMetric.PrintDiff(name, newMetric, w)
+		}
+
+		w.Flush()
 	}
 
 	return nil
