@@ -89,18 +89,20 @@ func run() error {
 	}
 
 	if useRaw {
-
 		samples_o := GetSamples(oldRes.Benchmarks)
 		for i := range samples_o {
 			samples_o[i].ComputeStats()
-			fmt.Println(len(samples_o[i].RValues), len(samples_o[i].Values), samples_o[i])
 		}
 
 		samples_n := GetSamples(newRes.Benchmarks)
 		for i := range samples_n {
 			samples_n[i].ComputeStats()
-			fmt.Println(len(samples_n[i].RValues), len(samples_n[i].Values), samples_n[i])
 		}
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
+
+		fmt.Fprintln(w, "Benchmark\tDelta\tOld\tNew")
+		fmt.Fprintln(w, "---------\t-----\t---\t---")
 
 		for _, o := range samples_o {
 			i := findSample(samples_n, o.Name)
@@ -108,8 +110,20 @@ func run() error {
 				continue
 			}
 			n := samples_n[i]
-			o.Diff(n)
+
+			diff := ((o.Mean - n.Mean) / math.Abs(o.Mean)) * 100
+
+			fmt.Fprintf(w, "%s", o.Name)
+
+			if diff > 0 {
+				fmt.Fprintf(w, "\t+%.2f%%", diff)
+			} else {
+				fmt.Fprintf(w, "\t%.2f%%", diff)
+			}
+			fmt.Fprintf(w, "\t%.2f\t%.2f\n", o.Mean, n.Mean)
 		}
+
+		w.Flush()
 	} else {
 		oldMeans := getMeans(oldRes.Benchmarks)
 		if len(oldMeans) == 0 {
