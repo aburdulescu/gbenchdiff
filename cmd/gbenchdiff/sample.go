@@ -67,7 +67,7 @@ func (o Sample) Print(w io.Writer, n Sample) {
 		}
 	}
 	if note == "" && pval != -1 {
-		note = fmt.Sprintf("(p=%0.3f n=%d+%d)", pval, len(o.RValues), len(n.RValues))
+		note = fmt.Sprintf("(p=%0.2f n=%d+%d)", pval, len(o.RValues), len(n.RValues))
 	}
 
 	fmt.Fprintf(w, "\t%s\t%s", delta, note)
