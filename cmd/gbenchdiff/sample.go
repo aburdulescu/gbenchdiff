@@ -10,7 +10,7 @@ import (
 
 const alpha = 0.05
 
-type Metrics struct {
+type Metric struct {
 	Name     string
 	RealTime Sample
 	CPUTime  Sample
@@ -74,7 +74,7 @@ func (o Sample) Print(w io.Writer, n Sample) {
 	fmt.Fprintf(w, "\t%.2f\t%.2f", o.Mean, n.Mean)
 }
 
-func findMetric(m []Metrics, name string) int {
+func findMetric(m []Metric, name string) int {
 	for i := range m {
 		if m[i].Name == name {
 			return i
@@ -83,15 +83,15 @@ func findMetric(m []Metrics, name string) int {
 	return -1
 }
 
-func GetMetrics(benchmarks []Benchmark) []Metrics {
-	var metrics []Metrics
+func GetMetrics(benchmarks []Benchmark) []Metric {
+	var metrics []Metric
 	for _, b := range benchmarks {
 		if b.RunType != "iteration" {
 			continue
 		}
 		i := findMetric(metrics, b.Name)
 		if i == -1 {
-			metrics = append(metrics, Metrics{Name: b.Name})
+			metrics = append(metrics, Metric{Name: b.Name})
 			i = len(metrics) - 1
 		}
 		metrics[i].RealTime.Values = append(metrics[i].RealTime.Values, b.RealTime)
