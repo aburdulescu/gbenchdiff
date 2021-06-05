@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"sort"
-	"strings"
 
 	"github.com/aburdulescu/gbenchdiff/stats"
 )
@@ -43,45 +42,6 @@ func (s *Sample) ComputeStats() {
 	s.Mean = Mean(s.RValues)
 }
 
-func findMetric(m []Metrics, name string) int {
-	for i := range m {
-		if m[i].Name == name {
-			return i
-		}
-	}
-	return -1
-}
-
-func GetMetrics(benchmarks []Benchmark) []Metrics {
-	var metrics []Metrics
-	for _, b := range benchmarks {
-		if strings.HasSuffix(b.Name, "_mean") ||
-			strings.HasSuffix(b.Name, "_median") ||
-			strings.HasSuffix(b.Name, "_stddev") {
-			continue
-		}
-		i := findMetric(metrics, b.Name)
-		if i == -1 {
-			metrics = append(metrics, Metrics{Name: b.Name})
-			i = len(metrics) - 1
-		}
-		metrics[i].RealTime.Values = append(metrics[i].RealTime.Values, b.RealTime)
-		metrics[i].CPUTime.Values = append(metrics[i].RealTime.Values, b.CPUTime)
-	}
-	for i := range metrics {
-		r := metrics[i].RealTime.Values
-		sort.Float64s(r)
-		metrics[i].RealTime.Values = r
-		metrics[i].RealTime.ComputeStats()
-
-		c := metrics[i].CPUTime.Values
-		sort.Float64s(c)
-		metrics[i].CPUTime.Values = c
-		metrics[i].CPUTime.ComputeStats()
-	}
-	return metrics
-}
-
 func (o Sample) Print(w io.Writer, n Sample) {
 	u, err := stats.MannWhitneyUTest(o.RValues, n.RValues, stats.LocationDiffers)
 
@@ -112,4 +72,41 @@ func (o Sample) Print(w io.Writer, n Sample) {
 
 	fmt.Fprintf(w, "\t%s\t%s", delta, note)
 	fmt.Fprintf(w, "\t%.2f\t%.2f", o.Mean, n.Mean)
+}
+
+func findMetric(m []Metrics, name string) int {
+	for i := range m {
+		if m[i].Name == name {
+			return i
+		}
+	}
+	return -1
+}
+
+func GetMetrics(benchmarks []Benchmark) []Metrics {
+	var metrics []Metrics
+	for _, b := range benchmarks {
+		if b.RunType != "iteration" {
+			continue
+		}
+		i := findMetric(metrics, b.Name)
+		if i == -1 {
+			metrics = append(metrics, Metrics{Name: b.Name})
+			i = len(metrics) - 1
+		}
+		metrics[i].RealTime.Values = append(metrics[i].RealTime.Values, b.RealTime)
+		metrics[i].CPUTime.Values = append(metrics[i].CPUTime.Values, b.CPUTime)
+	}
+	for i := range metrics {
+		r := metrics[i].RealTime.Values
+		sort.Float64s(r)
+		metrics[i].RealTime.Values = r
+		metrics[i].RealTime.ComputeStats()
+
+		c := metrics[i].CPUTime.Values
+		sort.Float64s(c)
+		metrics[i].CPUTime.Values = c
+		metrics[i].CPUTime.ComputeStats()
+	}
+	return metrics
 }
