@@ -17,7 +17,7 @@ For each benchmark in both files, the tool will:
 
 Small p-values indicate that the two distributions are significantly different.
 If the test indicates that there was no significant change between the two
-benchmarks (defined as p > 0.05), benchstat displays a single ~ instead of
+benchmarks (defined as p > 0.05), a single ~ will be displayed instead of
 the percent change.
 
 Notes:
