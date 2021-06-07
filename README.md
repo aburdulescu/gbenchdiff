@@ -29,3 +29,7 @@ Notes:
 - run the benchmark with --benchmark_repetitions(=10 should be enough)
 - run the benchmark with --benchmark_out=file.json
 ```
+
+## Acknowledgements
+
+Heavily inspired(the statistics code is copied from there) by [Go benchstat](https://github.com/golang/perf) tool.
