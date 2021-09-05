@@ -42,9 +42,9 @@ func usage() {
 
 func run() error {
 	var fHtml bool
-	var fCheckCtx bool
+	var fNoCtxCheck bool
 	flag.BoolVar(&fHtml, "html", false, "print result as HTML")
-	flag.BoolVar(&fCheckCtx, "check-ctx", true, "skip context comparison")
+	flag.BoolVar(&fNoCtxCheck, "no-ctx", false, "don't compare benchmark contexts")
 	flag.Usage = usage
 	flag.Parse()
 
@@ -76,7 +76,7 @@ func run() error {
 		return err
 	}
 
-	if fCheckCtx {
+	if !fNoCtxCheck {
 		if err := oldRes.Context.Equals(newRes.Context); err != nil {
 			return fmt.Errorf("context check failed: %v", err)
 		}
