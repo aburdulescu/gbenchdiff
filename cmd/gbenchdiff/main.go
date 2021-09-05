@@ -33,12 +33,18 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s old.json new.json\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Usage: %s [options] old.json new.json\n", os.Args[0])
+	fmt.Fprint(os.Stderr, "options:\n")
+	flag.PrintDefaults()
 	fmt.Fprint(os.Stderr, usageExtra)
 	os.Exit(1)
 }
 
 func run() error {
+	var fHtml bool
+	var fNoCtxCheck bool
+	flag.BoolVar(&fHtml, "html", false, "print result as HTML")
+	flag.BoolVar(&fNoCtxCheck, "no-ctx", false, "don't compare benchmark contexts")
 	flag.Usage = usage
 	flag.Parse()
 
@@ -68,6 +74,12 @@ func run() error {
 	var newRes Result
 	if err := json.NewDecoder(newFile).Decode(&newRes); err != nil {
 		return err
+	}
+
+	if !fNoCtxCheck {
+		if err := oldRes.Context.Equals(newRes.Context); err != nil {
+			return fmt.Errorf("context check failed: %v", err)
+		}
 	}
 
 	metrics_o := GetMetrics(oldRes.Benchmarks)
