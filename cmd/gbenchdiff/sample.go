@@ -62,7 +62,7 @@ func (o Sample) Print(w io.Writer, n Sample) {
 		if n.Mean == o.Mean {
 			delta = "0.00%"
 		} else {
-			pct := (1.0 - (n.Mean / o.Mean)) * 100.0
+			pct := ((n.Mean - o.Mean) / o.Mean) * 100.0
 			delta = fmt.Sprintf("%+.2f%%", pct)
 		}
 	}
