@@ -1,5 +1,13 @@
+CFLAGS = -g -O3 -Wall -fno-omit-frame-pointer
+LFLAGS = -lbenchmark -lpthread
+
+BINARY = bench
+
 build:
-	clang++ -O3 -o bench bench.cpp -lbenchmark -lpthread
+	clang++ $(CFLAGS) -o $(BINARY) bench.cpp $(LFLAGS)
 
 run: build
-	./bench --benchmark_out=bench.json
+	./$(BINARY) --benchmark_repetitions=10 --benchmark_out=bench.json
+
+clean:
+	rm -f $(BINARY)
