@@ -4,7 +4,7 @@ Diff results of two C++ google benchmarks
 ## Install
 
 ```
-go get -u github.com/aburdulescu/gbenchdiff/cmd/gbenchdiff
+go install github.com/aburdulescu/gbenchdiff/cmd/gbenchdiff@latest
 ```
 
 ## Usage
