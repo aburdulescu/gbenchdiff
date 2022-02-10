@@ -41,9 +41,9 @@ func usage() {
 }
 
 func run() error {
-	var fHtml bool
+	// var fHtml bool
 	var fNoCtxCheck bool
-	flag.BoolVar(&fHtml, "html", false, "print result as HTML")
+	// flag.BoolVar(&fHtml, "html", false, "print result as HTML")
 	flag.BoolVar(&fNoCtxCheck, "no-ctx", false, "don't compare benchmark contexts")
 	flag.Usage = usage
 	flag.Parse()
