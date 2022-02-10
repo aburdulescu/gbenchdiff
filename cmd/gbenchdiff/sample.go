@@ -5,7 +5,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/aburdulescu/gbenchdiff/stats"
+	"github.com/aburdulescu/gbenchdiff/internal/stats"
 )
 
 const alpha = 0.05

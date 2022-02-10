@@ -1,4 +1,5 @@
 # gbenchdiff
+
 Diff results of two C++ google benchmarks
 
 ## Install
@@ -32,4 +33,5 @@ Notes:
 
 ## Acknowledgements
 
-Heavily inspired(the statistics code is copied from there) by [Go benchstat](https://github.com/golang/perf) tool.
+Heavily inspired by [Go benchstat](https://github.com/golang/perf) tool
+(the statistics code is copied from there).
