@@ -43,9 +43,14 @@ func usage() {
 func run() error {
 	// var fHtml bool
 	var fNoCtxCheck bool
+	var fWithCPUTime bool
+
 	// flag.BoolVar(&fHtml, "html", false, "print result as HTML")
 	flag.BoolVar(&fNoCtxCheck, "no-ctx", false, "don't compare benchmark contexts")
+	flag.BoolVar(&fWithCPUTime, "with-cpu", false, "compare also CPU time")
+
 	flag.Usage = usage
+
 	flag.Parse()
 
 	args := flag.Args()
@@ -61,6 +66,7 @@ func run() error {
 		return err
 	}
 	defer oldFile.Close()
+
 	newFile, err := os.Open(newFilepath)
 	if err != nil {
 		return err
@@ -71,6 +77,7 @@ func run() error {
 	if err := json.NewDecoder(oldFile).Decode(&oldRes); err != nil {
 		return err
 	}
+
 	var newRes Result
 	if err := json.NewDecoder(newFile).Decode(&newRes); err != nil {
 		return err
@@ -87,8 +94,8 @@ func run() error {
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
 
-	fmt.Fprintln(w, "name\treal\tnote\told\tnew\tcpu\tnote\told\tnew")
-	fmt.Fprintln(w, "----\t----\t----\t---\t---\t---\t----\t---\t---")
+	fmt.Fprintln(w, "name\treal\tnote\told\tnew")
+	fmt.Fprintln(w, "----\t----\t----\t---\t---")
 
 	for _, m_o := range metrics_o {
 		i := findMetric(metrics_n, m_o.Name)
@@ -100,6 +107,28 @@ func run() error {
 		fmt.Fprintf(w, "%s", m_o.Name)
 
 		m_o.RealTime.Print(w, m_n.RealTime)
+
+		fmt.Fprintln(w)
+	}
+
+	w.Flush()
+
+	if !fWithCPUTime {
+		return nil
+	}
+
+	fmt.Fprintln(w, "\nname\tcpu\tnote\told\tnew")
+	fmt.Fprintln(w, "----\t---\t----\t---\t---")
+
+	for _, m_o := range metrics_o {
+		i := findMetric(metrics_n, m_o.Name)
+		if i == -1 {
+			continue
+		}
+		m_n := metrics_n[i]
+
+		fmt.Fprintf(w, "%s", m_o.Name)
+
 		m_o.CPUTime.Print(w, m_n.CPUTime)
 
 		fmt.Fprintln(w)
