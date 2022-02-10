@@ -33,7 +33,7 @@ func (c Context) Equals(other Context) error {
 		return fmt.Errorf("different MHz/CPU: %d vs %d", c.MHzPerCPU, other.MHzPerCPU)
 	}
 	if c.CPUScalingEnabled != other.CPUScalingEnabled {
-		return fmt.Errorf("different CPU scaling: %d vs %d", c.CPUScalingEnabled, other.CPUScalingEnabled)
+		return fmt.Errorf("different CPU scaling: %v vs %v", c.CPUScalingEnabled, other.CPUScalingEnabled)
 	}
 	return nil
 }
@@ -47,7 +47,7 @@ type Cache struct {
 
 func (c Cache) Equals(other Cache) error {
 	if c.Type != other.Type {
-		return fmt.Errorf("different type of CPU cache: %d vs %d", c.Type, other.Type)
+		return fmt.Errorf("different type of CPU cache: %v vs %v", c.Type, other.Type)
 	}
 	if c.Level != other.Level {
 		return fmt.Errorf("different CPU cache level: %d vs %d", c.Level, other.Level)
