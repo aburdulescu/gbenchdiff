@@ -12,6 +12,7 @@ const alpha = 0.05
 
 type Metric struct {
 	Name     string
+	TimeUnit string
 	RealTime Sample
 	CPUTime  Sample
 }
@@ -42,7 +43,7 @@ func (s *Sample) ComputeStats() {
 	s.Mean = Mean(s.RValues)
 }
 
-func (o Sample) Print(w io.Writer, n Sample) {
+func (o Sample) Print(w io.Writer, n Sample, tu string) {
 	u, err := stats.MannWhitneyUTest(o.RValues, n.RValues, stats.LocationDiffers)
 
 	pval := u.P
@@ -71,7 +72,7 @@ func (o Sample) Print(w io.Writer, n Sample) {
 	}
 
 	fmt.Fprintf(w, "\t%s\t%s", delta, note)
-	fmt.Fprintf(w, "\t%.2f\t%.2f", o.Mean, n.Mean)
+	fmt.Fprintf(w, "\t%.2f%s\t%.2f%s", o.Mean, tu, n.Mean, tu)
 }
 
 func findMetric(m []Metric, name string) int {
@@ -91,7 +92,10 @@ func GetMetrics(benchmarks []Benchmark) []Metric {
 		}
 		i := findMetric(metrics, b.Name)
 		if i == -1 {
-			metrics = append(metrics, Metric{Name: b.Name})
+			metrics = append(metrics, Metric{
+				Name:     b.Name,
+				TimeUnit: b.TimeUnit,
+			})
 			i = len(metrics) - 1
 		}
 		metrics[i].RealTime.Values = append(metrics[i].RealTime.Values, b.RealTime)

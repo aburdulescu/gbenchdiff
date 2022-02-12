@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -89,52 +90,59 @@ func run() error {
 		}
 	}
 
-	metrics_o := GetMetrics(oldRes.Benchmarks)
-	metrics_n := GetMetrics(newRes.Benchmarks)
+	oldMetrics := GetMetrics(oldRes.Benchmarks)
+	newMetrics := GetMetrics(newRes.Benchmarks)
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
-
-	fmt.Fprintln(w, "name\treal\tnote\told\tnew")
-	fmt.Fprintln(w, "----\t----\t----\t---\t---")
-
-	for _, m_o := range metrics_o {
-		i := findMetric(metrics_n, m_o.Name)
-		if i == -1 {
-			continue
-		}
-		m_n := metrics_n[i]
-
-		fmt.Fprintf(w, "%s", m_o.Name)
-
-		m_o.RealTime.Print(w, m_n.RealTime)
-
-		fmt.Fprintln(w)
+	printer := Printer{
+		w: tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0),
 	}
 
-	w.Flush()
+	if err := printer.Print("real", oldMetrics, newMetrics); err != nil {
+		return err
+	}
 
 	if !fWithCPUTime {
 		return nil
 	}
 
-	fmt.Fprintln(w, "\nname\tcpu\tnote\told\tnew")
-	fmt.Fprintln(w, "----\t---\t----\t---\t---")
+	return printer.Print("cpu", oldMetrics, newMetrics)
+}
 
-	for _, m_o := range metrics_o {
-		i := findMetric(metrics_n, m_o.Name)
+type Printer struct {
+	w *tabwriter.Writer
+}
+
+func (p Printer) Print(what string, old, new []Metric) error {
+	if what != "real" && what != "cpu" {
+		return fmt.Errorf("unknown what value '%s'", what)
+	}
+
+	fmt.Fprintf(p.w, "name\t%s\tnote\told\tnew\n", what)
+	fmt.Fprintf(p.w, "----\t%s\t----\t---\t---\n", strings.Repeat("-", len(what)))
+
+	for _, o := range old {
+		i := findMetric(new, o.Name)
 		if i == -1 {
 			continue
 		}
-		m_n := metrics_n[i]
+		n := new[i]
 
-		fmt.Fprintf(w, "%s", m_o.Name)
+		if n.TimeUnit != o.TimeUnit {
+			return fmt.Errorf(
+				"benchmarks have different time units: old=%s, new=%s",
+				o.TimeUnit, n.TimeUnit)
+		}
 
-		m_o.CPUTime.Print(w, m_n.CPUTime)
+		fmt.Fprintf(p.w, "%s", n.Name)
 
-		fmt.Fprintln(w)
+		if what == "real" {
+			o.RealTime.Print(p.w, n.RealTime, n.TimeUnit)
+		} else {
+			o.CPUTime.Print(p.w, n.CPUTime, n.TimeUnit)
+		}
+
+		fmt.Fprintln(p.w)
 	}
 
-	w.Flush()
-
-	return nil
+	return p.w.Flush()
 }
