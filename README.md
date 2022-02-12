@@ -11,9 +11,14 @@ go install github.com/aburdulescu/gbenchdiff/cmd/gbenchdiff@latest
 ## Usage
 
 ```
-gbenchdiff
-
-Usage: gbenchdiff old.json new.json
+Usage: gbenchdiff [options] old.json new.json
+options:
+  -filter string
+        select only the benchmarks with names that match the given regex
+  -no-ctx
+        don't compare benchmark contexts
+  -with-cpu
+        compare also CPU time
 
 For each benchmark in both files, the tool will:
 - remove outliers with interquartile range rule
@@ -26,9 +31,10 @@ If the test indicates that there was no significant change between the two
 benchmarks (defined as p > 0.05), a single ~ will be displayed instead of
 the percent change.
 
-Notes:
-- run the benchmark with --benchmark_repetitions(=10 should be enough)
-- run the benchmark with --benchmark_out=file.json
+IMPORTANT:
+Run the benchmark with the following flags:
+    --benchmark_out=file.json
+    --benchmark_repetitions(=10 should be enough in most cases)
 ```
 
 ## Acknowledgements
