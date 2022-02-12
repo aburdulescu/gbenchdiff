@@ -37,6 +37,8 @@ Run the benchmark with the following flags:
     --benchmark_repetitions(=10 should be enough in most cases)
 ```
 
+For a example, see [example](./example) directory.
+
 ## Acknowledgements
 
 Heavily inspired by [Go benchstat](https://github.com/golang/perf) tool
