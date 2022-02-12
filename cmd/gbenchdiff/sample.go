@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"regexp"
 	"sort"
 
 	"github.com/aburdulescu/gbenchdiff/internal/stats"
@@ -84,9 +85,12 @@ func findMetric(m []Metric, name string) int {
 	return -1
 }
 
-func GetMetrics(benchmarks []Benchmark) []Metric {
+func GetMetrics(benchmarks []Benchmark, filterRe *regexp.Regexp) []Metric {
 	var metrics []Metric
 	for _, b := range benchmarks {
+		if filterRe != nil && !filterRe.MatchString(b.Name) {
+			continue
+		}
 		if b.RunType != "iteration" {
 			continue
 		}

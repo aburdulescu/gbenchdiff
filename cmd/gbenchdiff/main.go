@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"text/tabwriter"
 )
@@ -21,9 +22,10 @@ If the test indicates that there was no significant change between the two
 benchmarks (defined as p > 0.05), a single ~ will be displayed instead of
 the percent change.
 
-Notes:
-- run the benchmark with --benchmark_repetitions(=10 should be enough)
-- run the benchmark with --benchmark_out=file.json
+IMPORTANT:
+Run the benchmark with the following flags:
+    --benchmark_out=file.json
+    --benchmark_repetitions(=10 should be enough in most cases)
 `
 
 func main() {
@@ -45,10 +47,12 @@ func run() error {
 	// var fHtml bool
 	var fNoCtxCheck bool
 	var fWithCPUTime bool
+	var fFilter string
 
 	// flag.BoolVar(&fHtml, "html", false, "print result as HTML")
 	flag.BoolVar(&fNoCtxCheck, "no-ctx", false, "don't compare benchmark contexts")
 	flag.BoolVar(&fWithCPUTime, "with-cpu", false, "compare also CPU time")
+	flag.StringVar(&fFilter, "filter", "", "select only the benchmarks with names that match the given regex")
 
 	flag.Usage = usage
 
@@ -57,6 +61,15 @@ func run() error {
 	args := flag.Args()
 	if len(args) < 2 {
 		usage()
+	}
+
+	var filterRe *regexp.Regexp
+	if fFilter != "" {
+		re, err := regexp.Compile(fFilter)
+		if err != nil {
+			return err
+		}
+		filterRe = re
 	}
 
 	oldFilepath := args[0]
@@ -90,8 +103,8 @@ func run() error {
 		}
 	}
 
-	oldMetrics := GetMetrics(oldRes.Benchmarks)
-	newMetrics := GetMetrics(newRes.Benchmarks)
+	oldMetrics := GetMetrics(oldRes.Benchmarks, filterRe)
+	newMetrics := GetMetrics(newRes.Benchmarks, filterRe)
 
 	printer := Printer{
 		w: tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0),
@@ -105,6 +118,8 @@ func run() error {
 		return nil
 	}
 
+	fmt.Fprintln(printer.w)
+
 	return printer.Print("cpu", oldMetrics, newMetrics)
 }
 
@@ -117,8 +132,8 @@ func (p Printer) Print(what string, old, new []Metric) error {
 		return fmt.Errorf("unknown what value '%s'", what)
 	}
 
-	fmt.Fprintf(p.w, "name\t%s\tnote\told\tnew\n", what)
-	fmt.Fprintf(p.w, "----\t%s\t----\t---\t---\n", strings.Repeat("-", len(what)))
+	fmt.Fprintf(p.w, "%s time\tdelta\tnote\told\tnew\n", what)
+	fmt.Fprintf(p.w, "%s-----\t-----\t----\t---\t---\n", strings.Repeat("-", len(what)))
 
 	for _, o := range old {
 		i := findMetric(new, o.Name)
