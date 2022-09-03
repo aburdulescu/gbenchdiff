@@ -10,6 +10,8 @@ import (
 	"text/tabwriter"
 )
 
+const version = "0.1.0"
+
 const usageExtra = `
 For each benchmark in both files, the tool will:
 - remove outliers with interquartile range rule
@@ -48,15 +50,22 @@ func run() error {
 	var fNoCtxCheck bool
 	var fWithCPUTime bool
 	var fFilter string
+	var fVersion bool
 
 	// flag.BoolVar(&fHtml, "html", false, "print result as HTML")
 	flag.BoolVar(&fNoCtxCheck, "no-ctx", false, "don't compare benchmark contexts")
 	flag.BoolVar(&fWithCPUTime, "with-cpu", false, "compare also CPU time")
 	flag.StringVar(&fFilter, "filter", "", "select only the benchmarks with names that match the given regex")
+	flag.BoolVar(&fVersion, "version", false, "print version")
 
 	flag.Usage = usage
 
 	flag.Parse()
+
+	if fVersion {
+		fmt.Println(version)
+		return nil
+	}
 
 	args := flag.Args()
 	if len(args) < 2 {
