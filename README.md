@@ -4,9 +4,15 @@ Diff results of two C++ google benchmarks
 
 ## Install
 
+### From source using `go`
+
 ```
 go install github.com/aburdulescu/gbenchdiff/cmd/gbenchdiff@latest
 ```
+
+### Using prebuilt binary
+
+See [here](https://github.com/aburdulescu/gbenchdiff/releases/latest)
 
 ## Usage
 
