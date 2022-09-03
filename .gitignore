@@ -18,3 +18,4 @@
 /example/*.json
 
 /cmd/gbenchdiff/gbenchdiff
+/cmd/gbenchdiff/release-out/
