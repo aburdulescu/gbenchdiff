@@ -9,7 +9,8 @@ function release() {
     set -x
     dst=$out_dir/$exe"_"$1"_"$2
     GOOS=$1 GOARC=$2 go build -ldflags "-s -w" -o $dst
-    sha256sum $dst > $dst.sha256
+    gzip $dst
+    sha256sum $dst.gz > $dst.gz.sha256
 }
 
 rm -rf $out_dir
