@@ -1,3 +1,3 @@
-module github.com/aburdulescu/gbenchdiff
+module bandr.me/p/gbenchdiff
 
 go 1.16

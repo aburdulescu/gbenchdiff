@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/aburdulescu/gbenchdiff/internal/stats"
+	"bandr.me/p/gbenchdiff/internal/stats"
 )
 
 const alpha = 0.05
