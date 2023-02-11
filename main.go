@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"text/tabwriter"
 )
-
-const version = "0.1.0"
 
 const usageExtra = `
 For each benchmark in both files, the tool will:
@@ -63,7 +62,23 @@ func run() error {
 	flag.Parse()
 
 	if fVersion {
-		fmt.Println(version)
+		bi, _ := debug.ReadBuildInfo()
+		valOf := func(k string) string {
+			for _, v := range bi.Settings {
+				if v.Key == k {
+					return v.Value
+				}
+			}
+			return ""
+		}
+		fmt.Println(
+			bi.Main.Version,
+			bi.GoVersion,
+			valOf("GOOS"),
+			valOf("GOARCH"),
+			valOf("vcs.revision"),
+			valOf("vcs.time"),
+		)
 		return nil
 	}
 
