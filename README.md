@@ -7,7 +7,7 @@ Diff results of two C++ google benchmarks
 ### From source using `go`
 
 ```
-go install bandr.me/p/gbenchdiff/cmd/gbenchdiff@latest
+go install bandr.me/p/gbenchdiff@latest
 ```
 
 ### Using prebuilt binary
