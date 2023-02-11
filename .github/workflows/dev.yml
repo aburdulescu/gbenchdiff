@@ -1,0 +1,30 @@
+name: Dev
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+
+  ci:
+    strategy:
+      matrix:
+        go: [1.19.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go }}
+
+    - name: Disable cgo
+      run: go env -w CGO_ENABLED=0
+
+    - name: make
+      run: make

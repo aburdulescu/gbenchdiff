@@ -200,12 +200,12 @@ func MannWhitneyUTest(x1, x2 []float64, alt LocationHypothesis) (*MannWhitneyUTe
 		// correction).
 		t := tieCorrection(T)
 		N := float64(n1 + n2)
-		μ_U := float64(n1*n2) / 2
-		σ_U := math.Sqrt(float64(n1*n2) * ((N + 1) - t/(N*(N-1))) / 12)
-		if σ_U == 0 {
+		u_U := float64(n1*n2) / 2
+		o_U := math.Sqrt(float64(n1*n2) * ((N + 1) - t/(N*(N-1))) / 12)
+		if o_U == 0 {
 			return nil, ErrSamplesEqual
 		}
-		numer := U1 - μ_U
+		numer := U1 - u_U
 		// Perform continuity correction.
 		switch alt {
 		case LocationDiffers:
@@ -215,7 +215,7 @@ func MannWhitneyUTest(x1, x2 []float64, alt LocationHypothesis) (*MannWhitneyUTe
 		case LocationGreater:
 			numer -= 0.5
 		}
-		z := numer / σ_U
+		z := numer / o_U
 		switch alt {
 		case LocationDiffers:
 			p = 2 * math.Min(StdNormal.CDF(z), 1-StdNormal.CDF(z))

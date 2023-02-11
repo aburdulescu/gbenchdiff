@@ -9,14 +9,16 @@ import "math"
 // mathSign returns the sign of x: -1 if x < 0, 0 if x == 0, 1 if x > 0.
 // If x is NaN, it returns NaN.
 func mathSign(x float64) float64 {
-	if x == 0 {
+	switch {
+	case x == 0:
 		return 0
-	} else if x < 0 {
+	case x < 0:
 		return -1
-	} else if x > 0 {
+	case x > 0:
 		return 1
+	default:
+		return nan
 	}
-	return nan
 }
 
 const smallFactLimit = 20 // 20! => 62 bits
@@ -54,17 +56,6 @@ func mathChoose(n, k int) float64 {
 	}
 
 	return math.Exp(lchoose(n, k))
-}
-
-// mathLchoose returns math.Log(mathChoose(n, k)).
-func mathLchoose(n, k int) float64 {
-	if k == 0 || k == n {
-		return 0
-	}
-	if k < 0 || n < k {
-		return math.NaN()
-	}
-	return lchoose(n, k)
 }
 
 func lchoose(n, k int) float64 {

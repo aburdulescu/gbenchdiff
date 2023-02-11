@@ -26,35 +26,8 @@ func (n NormalDist) PDF(x float64) float64 {
 	return math.Exp(-z*z/(2*n.Sigma*n.Sigma)) * invSqrt2Pi / n.Sigma
 }
 
-func (n NormalDist) pdfEach(xs []float64) []float64 {
-	res := make([]float64, len(xs))
-	if n.Mu == 0 && n.Sigma == 1 {
-		// Standard normal fast path
-		for i, x := range xs {
-			res[i] = math.Exp(-x*x/2) * invSqrt2Pi
-		}
-	} else {
-		a := -1 / (2 * n.Sigma * n.Sigma)
-		b := invSqrt2Pi / n.Sigma
-		for i, x := range xs {
-			z := x - n.Mu
-			res[i] = math.Exp(z*z*a) * b
-		}
-	}
-	return res
-}
-
 func (n NormalDist) CDF(x float64) float64 {
 	return math.Erfc(-(x-n.Mu)/(n.Sigma*math.Sqrt2)) / 2
-}
-
-func (n NormalDist) cdfEach(xs []float64) []float64 {
-	res := make([]float64, len(xs))
-	a := 1 / (n.Sigma * math.Sqrt2)
-	for i, x := range xs {
-		res[i] = math.Erfc(-(x-n.Mu)*a) / 2
-	}
-	return res
 }
 
 func (n NormalDist) InvCDF(p float64) (x float64) {
@@ -90,25 +63,27 @@ func (n NormalDist) InvCDF(p float64) (x float64) {
 		phigh = 1 - plow
 	)
 
-	if p < 0 || p > 1 {
+	switch {
+	case p < 0 || p > 1:
 		return nan
-	} else if p == 0 {
+	case p == 0:
 		return -inf
-	} else if p == 1 {
+	case p == 1:
 		return inf
 	}
 
-	if p < plow {
+	switch {
+	case p < plow:
 		// Rational approximation for lower region.
 		q := math.Sqrt(-2 * math.Log(p))
 		x = (((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q + c6) /
 			((((d1*q+d2)*q+d3)*q+d4)*q + 1)
-	} else if phigh < p {
+	case phigh < p:
 		// Rational approximation for upper region.
 		q := math.Sqrt(-2 * math.Log(1-p))
 		x = -(((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q + c6) /
 			((((d1*q+d2)*q+d3)*q+d4)*q + 1)
-	} else {
+	default:
 		// Rational approximation for central region.
 		q := p - 0.5
 		r := q * q
@@ -119,7 +94,7 @@ func (n NormalDist) InvCDF(p float64) (x float64) {
 	// Refine approximation.
 	e := 0.5*math.Erfc(-x/math.Sqrt2) - p
 	u := e * math.Sqrt(2*math.Pi) * math.Exp(x*x/2)
-	x = x - u/(1+x*u/2)
+	x -= u / (1 + x*u/2)
 
 	// Adjust from standard normal.
 	return x*n.Sigma + n.Mu

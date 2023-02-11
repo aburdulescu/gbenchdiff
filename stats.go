@@ -15,7 +15,7 @@ func Percentile(xs []float64, pctile float64) float64 {
 		return math.NaN()
 	}
 	N := float64(len(xs))
-	//n := pctile * (N + 1) // R6
+	// n := pctile * (N + 1) // R6
 	n := 1/3.0 + pctile*(N+1/3.0) // R8
 	kf, frac := math.Modf(n)
 	k := int(kf)

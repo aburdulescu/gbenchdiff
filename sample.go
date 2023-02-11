@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -52,15 +53,16 @@ func (o Sample) Print(w io.Writer, n Sample, tu string) {
 	delta := "~"
 	note := ""
 
-	if err == stats.ErrZeroVariance {
+	switch {
+	case errors.Is(err, stats.ErrZeroVariance):
 		note = "(zero variance)"
-	} else if err == stats.ErrSampleSize {
+	case errors.Is(err, stats.ErrSampleSize):
 		note = "(too few samples)"
-	} else if err == stats.ErrSamplesEqual {
+	case errors.Is(err, stats.ErrSamplesEqual):
 		note = "(all equal)"
-	} else if err != nil {
+	case err != nil:
 		note = fmt.Sprintf("(%s)", err)
-	} else if pval < alpha {
+	case pval < alpha:
 		if n.Mean == o.Mean {
 			delta = "0.00%"
 		} else {
@@ -68,6 +70,7 @@ func (o Sample) Print(w io.Writer, n Sample, tu string) {
 			delta = fmt.Sprintf("%+.2f%%", pct)
 		}
 	}
+
 	if note == "" && pval != -1 {
 		note = fmt.Sprintf("(p=%0.2f n=%d+%d)", pval, len(o.RValues), len(n.RValues))
 	}

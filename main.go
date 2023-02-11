@@ -108,7 +108,7 @@ func run() error {
 
 	if !fNoCtxCheck {
 		if err := oldRes.Context.Equals(newRes.Context); err != nil {
-			return fmt.Errorf("context check failed: %v", err)
+			return fmt.Errorf("context check failed: %w", err)
 		}
 	}
 

@@ -25,13 +25,13 @@ import (
 // easiest to get the context from the former paper and the details
 // from the latter).
 type UDist struct {
-	N1, N2 int
-
 	// T is the count of the number of ties at each rank in the
 	// input distributions. T may be nil, in which case it is
 	// assumed there are no ties (which is equivalent to an M+N
 	// slice of 1s). It must be the case that Sum(T) == M+N.
 	T []int
+
+	N1, N2 int
 }
 
 // hasTies returns true if d has any tied samples.
@@ -214,7 +214,7 @@ func makeUmemo(twoU, n1 int, t []int) []map[ukey]float64 {
 	// bounds. It might be worth turning these into directly
 	// indexible slices.
 	A := make([]map[ukey]float64, K+1)
-	A[K] = map[ukey]float64{ukey{n1: n1, twoU: twoU}: 0}
+	A[K] = map[ukey]float64{{n1: n1, twoU: twoU}: 0}
 
 	// Compute memo table (k, n1, twoU) triples from high K values
 	// to low K values. This drives the recurrence relation
@@ -320,28 +320,6 @@ func twoUmax(n1 int, t, a []int) int {
 	return twoU
 }
 
-func (d UDist) PMF(U float64) float64 {
-	if U < 0 || U >= 0.5+float64(d.N1*d.N2) {
-		return 0
-	}
-
-	if d.hasTies() {
-		// makeUmemo computes the CDF directly. Take its
-		// difference to get the PMF.
-		p1, ok1 := makeUmemo(int(2*U)-1, d.N1, d.T)[len(d.T)][ukey{d.N1, int(2*U) - 1}]
-		p2, ok2 := makeUmemo(int(2*U), d.N1, d.T)[len(d.T)][ukey{d.N1, int(2 * U)}]
-		if !ok1 || !ok2 {
-			panic("makeUmemo did not return expected memoization table")
-		}
-		return (p2 - p1) / mathChoose(d.N1+d.N2, d.N1)
-	}
-
-	// There are no ties. Use the fast algorithm. U must be integral.
-	Ui := int(math.Floor(U))
-	// TODO: Use symmetry to minimize U
-	return d.p(Ui)[Ui]
-}
-
 func (d UDist) CDF(U float64) float64 {
 	if U < 0 {
 		return 0
@@ -375,13 +353,4 @@ func (d UDist) CDF(U float64) float64 {
 		p = 1 - p
 	}
 	return p
-}
-
-func (d UDist) Step() float64 {
-	return 0.5
-}
-
-func (d UDist) Bounds() (float64, float64) {
-	// TODO: More precise bounds when there are ties.
-	return 0, float64(d.N1 * d.N2)
 }

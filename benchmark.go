@@ -3,18 +3,18 @@ package main
 import "fmt"
 
 type Result struct {
-	Context    Context     `json:"context"`
 	Benchmarks []Benchmark `json:"benchmarks"`
+	Context    Context     `json:"context"`
 }
 
 type Context struct {
 	Date              string  `json:"date"`
 	Hostname          string  `json:"host_name"`
 	Executable        string  `json:"executable"`
+	Caches            []Cache `json:"caches"`
 	NumCPUs           int     `json:"num_cpus"`
 	MHzPerCPU         int     `json:"mhz_per_cpu"`
 	CPUScalingEnabled bool    `json:"cpu_scaling_enabled"`
-	Caches            []Cache `json:"caches"`
 }
 
 func (c Context) Equals(other Context) error {
@@ -62,11 +62,11 @@ type Benchmark struct {
 	Name            string  `json:"name"`
 	RunName         string  `json:"run_name"`
 	RunType         string  `json:"run_type"`
+	TimeUnit        string  `json:"time_unit"`
 	Repetitions     uint64  `json:"repetitions"`
 	RepetitionIndex uint64  `json:"repetition_index"`
 	Threads         int     `json:"threads"`
 	Iterations      uint64  `json:"iterations"`
 	RealTime        float64 `json:"real_time"`
 	CPUTime         float64 `json:"cpu_time"`
-	TimeUnit        string  `json:"time_unit"`
 }
